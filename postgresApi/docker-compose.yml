@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  postgress-api:
+    container_name: postgress-api
+    build:
+      context: . 
+      dockerfile: Dockerfile
+    image: wiezmankimchi/postgress-api  
+    volumes:
+      - ".:/app"
+      - "/app/node_modules"
+    ports:
+      - "4040:4040"
+    environment:
+      - NODE_ENV=development
+    network_mode: bridge
+
