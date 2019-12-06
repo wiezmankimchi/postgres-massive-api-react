@@ -1,3 +1,5 @@
+var _ = require("lodash");
+
 module.exports = {
   home: (req, res) => {
     res.send(
@@ -11,7 +13,9 @@ module.exports = {
   },
   getAllSchemas: (req, res) => {
     const db = req.app.get('db');
-    const schemas = db.find();
+    const tables = db.listTables();
+    const schema_tables = tables.map(table=>(table.indexOf(".")==-1 ? "public" : table.substr(0,table.indexOf("."))))
+    const schemas = _.uniq(schema_tables);
     res.send(schemas);
   },
   getUsers: (req, res) => {
