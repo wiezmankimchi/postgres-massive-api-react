@@ -3,49 +3,73 @@ var _ = require("lodash");
 module.exports = {
   home: (req, res) => {
     res.send(
-      'Massive API. You are connected to schema:' + req.app.get('db'.schema)
+      'Massive API. Connected'
     );
   },
-  getAllTables: (req, res) => {
+  getDBName: (req,res) =>{
+    const sql = 'SELECT current_database();'
+    const dbName = req.app.get('db').query(sql).then(rows=>{ res.status(200).send(rows)})
+  },
+  getSchemas: (req,res) => {
+      const sql = `
+        select nspname 
+        from pg_catalog.pg_namespace
+        where nspname not in ('postgraphile_watch', 'information_schema')
+        and   nspname not like 'pg_%';`
+      const dbSchemas = req.app.get('db').query(sql).then(rows=>{ res.status(200).send(rows)})
+  },
+  getTables: (req,res) => {
     const db = req.app.get('db');
     const tables = db.listTables();
-    res.send(tables);
+    const data = tables.map((row,id)=>({id:id, table:row}))
+    console.log(data)
+    res.send(data);
   },
-  getAllSchemas: (req, res) => {
-    const db = req.app.get('db');
-    const tables = db.listTables();
-    const schema_tables = tables.map(table=>(table.indexOf(".")==-1 ? "public" : table.substr(0,table.indexOf("."))))
-    const schemas = _.uniq(schema_tables);
-    res.send(schemas);
+  getFields: (req,res) => {
+    const { scm, tbl } = req.params
+    console.log(scm, tbl);
+    
+    const sql = `SELECT *
+      FROM information_schema.columns
+      WHERE table_schema = '${scm}'
+      AND table_name   = '${tbl}'
+      ;`
+    console.log(sql)  
+    const fields = req.app.get('db').query(sql).then(rows=>{ res.status(200).send(rows)})
   },
-  getUsers: (req, res) => {
-    //This function gets all the users from our database users table. We start by setting db equal to
-    //our db file. Then we invoke get_users, which is our SQL query for getting all users. We then send
-    //that data to the client-side.
-    // const db = req.app.get('db');
-    const { sch, tbl } = req.params;
-    // const { tbl } = req.body;
-
-    console.log(sch, tbl);
-    const sql = 'SELECT * from ' + sch + '.' + tbl;
-
-    // req.app
-    //   .get('db')
-    //   .get_users({ tableName })
-    //   .then(rows => {
-    //     res.status(200).send(rows);
-    //   });
+  getSchemaStats: (req,res) => {
+    const { scm } = req.params
+    const sql = `SELECT * FROM pg_catalog.pg_stat_user_tables where schemaname = '${scm}';`
+    const stats = req.app.get('db').query(sql).then(rows=>{ res.status(200).send(rows)})
+  },
+  dbReload: (req,res) => {
+    const dbReload = req.app.get('db').reload().then(()=>{ res.status(200).send('db refreshed')})
+  },
+  dbClean: (req,res)=> {
+    const cleanDB = req.app.get('db').clean();
+    res.send('done')
+  },
+  attach: (req,res)=> {
+    const { scm } = req.params
+    console.log('scm',scm)
+    const scmAttach = req.app.get('db').attach([{scm}])//.then((results)=>{ res.status(200).send(`${results} added`)})
+    console.log(scmAttach)
+    res.send('added')
+  },
+  getTblDetails: async (req, res) => {
+    const { scm, tbl } = req.params;
+    const sql = 'SELECT * from ' + scm + '.' + tbl;
     const db = req.app.get('db');
 
-    db.query(sql).then(rows => {
+    await db.query(sql).then(rows => {
+      console.log(rows)
       res.status(200).send(rows);
     });
-
-    // db.get_users()
-    //   .then(users => {
-    //     res.status(200).send(users);
-    //   })
-    //   .catch(err => console.log(err));
+  },
+  dbFind: async (req,res) => {
+      const { table, schema } = req.params
+      console.log(table, schema)
+      res.status(200).send('got it')
   },
   postUser: (req, res) => {
     //This function takes a name(string) from the clients request, and creates a new user with it, by

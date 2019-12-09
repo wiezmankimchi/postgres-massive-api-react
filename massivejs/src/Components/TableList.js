@@ -6,7 +6,7 @@ export default function TableList(props) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const results = await axios('/api/alltables');
+      const results = await axios('/api/getTables');
       console.log(results.data);
       setTables(results.data);
     };
@@ -20,10 +20,10 @@ export default function TableList(props) {
 
   return (
     <div>
-      <h1>TableList</h1>
-      {tables.map((table, id) => {
+      <h1>Table List</h1>
+      {tables.length > 0 ? tables.map((table, id) => {
         return <div key={id}>{table}</div>;
-      })}
+      }) : <div>No Tables exists in db</div>}
     </div>
   );
 }

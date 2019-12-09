@@ -14,5 +14,6 @@ services:
       - "4040:4040"
     environment:
       - NODE_ENV=development
-    network_mode: bridge
+    networks: 
+      - front
 

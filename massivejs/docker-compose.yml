@@ -3,6 +3,7 @@ version: '3.7'
 services:
   massive:
     container_name: massive
+    image: wiezmankimchi/massive-react
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,4 +14,4 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=development
-    network_mode: bridge
+    network_mode: front

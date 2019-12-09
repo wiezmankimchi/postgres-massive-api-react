@@ -1,0 +1,61 @@
+# Use postgres/example user/password credentials
+version: "3.1"
+
+
+services:
+  db:
+    image: postgres
+    restart: always
+    networks: 
+      - front
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data  
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer
+    restart: always
+    networks: 
+      - front
+    ports:
+      - 8080:8080
+
+  postgress-api:
+    container_name: postgress-api
+    build:
+      context: /home/wiezmankimchi/CODE/docker/postgres-massive-api-react/postgresApi
+      dockerfile: /home/wiezmankimchi/CODE/docker/postgres-massive-api-react/postgresApi/Dockerfile
+    image: wiezmankimchi/postgress-api  
+    volumes:
+      - "./postgresApi:/app"
+      - "/app/node_modules"
+    ports:
+      - "4040:4040"
+    environment:
+      - NODE_ENV=development
+    networks: 
+      - front
+    
+  massive:
+    container_name: massive
+    image: wiezmankimchi/massive-react
+    build:
+      context: /home/wiezmankimchi/CODE/docker/postgres-massive-api-react/massivejs
+      dockerfile: /home/wiezmankimchi/CODE/docker/postgres-massive-api-react/massivejs/Dockerfile
+    volumes:
+      - './massivejs:/app'
+      - '/app/node_modules'
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - API_SCHEMAS=["public","chinooks"]
+    networks: 
+      - front
+
+networks:
+  front:
+    driver: bridge  
